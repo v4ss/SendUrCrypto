@@ -22,15 +22,16 @@ contract SendUrCrypto is CustomERC20Token {
 
     function getRandom() private returns (uint256) {}
 
-    function getCode(uint256 value) public returns (uint256) {
-        require(msg.sender.balance >= value, "Insufficient funds");
-        uint256 random = getRandom();
-        require(msg.sender.transfer(value), "Trasnfer failed");
+    function getCode() public payable returns (uint256) {
         Deposit memory newDeposit;
         newDeposit.userAddress = msg.sender;
-        newDeposit.code = random;
-        newDeposit.value = value;
+        newDeposit.code = getRandom();
+        newDeposit.value = msg.value;
 
         deposits.push(newDeposit);
+
+        return newDeposit.code;
     }
+
+    function sendMoney() public payable {}
 }
