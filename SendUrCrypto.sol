@@ -8,10 +8,16 @@ contract SendUrCrypto is CustomERC20Token {
 
     address payable public smartContractAddress;
 
-    struct Deposit {
-        address userAddress;
+    string private key = "Jg68yfTkf54jIkEuf69K7";
+
+    struct Code {
         uint256 code;
         uint256 value;
+    }
+
+    struct Deposit {
+        address userAddress;
+        Code[] codes;
     }
 
     Deposit[] private deposits;
@@ -20,18 +26,35 @@ contract SendUrCrypto is CustomERC20Token {
         smartContractAddress = payable(address(this));
     }
 
-    function getRandom() private returns (uint256) {}
-
-    function getCode() public payable returns (uint256) {
-        Deposit memory newDeposit;
-        newDeposit.userAddress = msg.sender;
-        newDeposit.code = getRandom();
-        newDeposit.value = msg.value;
-
-        deposits.push(newDeposit);
-
-        return newDeposit.code;
+    function findUserIndex(address userAddress) private view returns(uint256) {
+        for(uint256 i = 0 ; i < deposits.length ; i++) {
+            if(deposits[i].userAddress == userAddress) {
+                return i;
+            }
+        }
+        return type(uint256).max;
     }
 
-    function sendMoney() public payable {}
+    function getRandom(address user, uint value) private view returns (uint256) {
+        return uint256(keccak256(abi.encodePacked(key, user, value, block.timestamp, block.number, block.difficulty)));
+    }
+
+    function createCode() public payable {
+        Deposit memory newDeposit;
+        Code memory newCode;
+        newCode.code = getRandom(msg.sender, msg.value);
+        newCode.value = msg.value;
+        newDeposit.userAddress = msg.sender;
+        deposits.codes.push(newCode);
+
+        deposits.push(newDeposit);
+    }
+
+    function getCodeByUser() public view returns (Deposit memory info) {
+        uint256 index = findUserIndex(msg.sender);
+        require(index != type(uint256).max, "User do not have code");
+        return deposits[index];
+    }
+
+    
 }
