@@ -13,9 +13,24 @@ contract SendUrCrypto is CustomERC20Token {
         uint256 value;
     }
 
-    mapping(address => Code[]) private userCodes;
+    struct UserCode {
+        address userAddress;
+        Code[] codes;
+    }
+
+    Code[] private code;
+    UserCode[] private userCodes;
 
     constructor() CustomERC20Token("SUCRToken", "SUCR", 18, 100000) {}
+
+    function findUserIndex(address userAddress) private view returns(uint256) {
+        for(uint256 i = 0 ; i < userCodes.length ; i++) {
+            if(userCodes[i].userAddress == userAddress) {
+                return i;
+            }
+        }
+        return type(uint256).max;
+    }
 
     /**
      * @notice Get a random number using a key, user address, value sent by the user, timestamp, block number and block difficulty
@@ -37,21 +52,40 @@ contract SendUrCrypto is CustomERC20Token {
      */
     function createCode() public payable {
         /// Push the new code with its value in the mapping
-        userCodes[msg.sender].push(
-            Code(
-                getRandom(msg.sender, msg.value), /// To generate a random code (cf. getRandom() function)
-                msg.value));
+        
+        Code memory newCode = Code(
+            getRandom(msg.sender, msg.value),
+            msg.value
+        );
+
+        UserCode memory newDeposit = UserCode(
+            msg.sender,
+            code
+        );
+
+        userCodes.push(newDeposit);
+
+        code.pop();
     }
 
-    function getCodeByUser() public view returns (Code[] memory) {
-        return userCodes[msg.sender];
+
+    function getCodeByUser() public view returns (UserCode memory) {
+        uint256 index = findUserIndex(msg.sender);
+        require(index != type(uint256).max, "User do not have code");
+        return userCodes[index];
     }
 
-/*
+
     function redeemCode(uint256 code) public {
+        for(uint256 i = 0 ; i < userCodes.length ; i++) {
+            for(uint256 j = 0 ; j < userCodes[i].codes.length ; j++) {
 
-        payable(msg.sender).transfer(codeToRedeem.value);
+                if(userCodes[i].codes[j].code == code) {
+                    payable(msg.sender).transfer(userCodes[i].codes[j].value);
+                }
+            }
+        }
     }
-*/
+
     
 }
