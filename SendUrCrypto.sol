@@ -66,6 +66,7 @@ contract SendUrCrypto is CustomERC20Token {
             UserCode storage newDeposit = userCodes[userCodes.length];
             newDeposit.userAddress = msg.sender;
             newDeposit.codes[0].code = getRandom(msg.sender, msg.value);
+            newDeposit.codes[0].value = msg.value;
             newDeposit.codesCount = 1;
         }
         /// He exists, we add him his new code
@@ -73,6 +74,7 @@ contract SendUrCrypto is CustomERC20Token {
             UserCode storage newDeposit = userCodes[index];
             uint256 count = userCodes[index].codesCount;
             newDeposit.codes[count].code = getRandom(msg.sender, msg.value);
+            newDeposit.codes[count].value = msg.value;
             newDeposit.codesCount = count++;
         }
     }
