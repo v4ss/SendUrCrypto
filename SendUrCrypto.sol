@@ -2,9 +2,7 @@
 
 pragma solidity >=0.8.2 <0.9.0;
 
-import "/contracts/CustomERC20Token.sol";
-
-contract SendUrCrypto is CustomERC20Token {
+contract SendUrCrypto {
 
     string private key = "Jg68yfTkf54jIkEuf69K7";
 
@@ -15,8 +13,6 @@ contract SendUrCrypto is CustomERC20Token {
     }
 
     UserCode[] private userCodes;
-
-    constructor() CustomERC20Token("SUCRToken", "SUCR", 18, 100000) {}
 
     /**
      * @notice Find the index of the current user in the users array
