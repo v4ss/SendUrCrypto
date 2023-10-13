@@ -8,16 +8,10 @@ contract SendUrCrypto is CustomERC20Token {
 
     string private key = "Jg68yfTkf54jIkEuf69K7";
 
-    struct Code {
-        uint256 code;
-        uint256 value;
-    }
-
     struct UserCode {
         address userAddress;
-        uint256 codesCount;
-        mapping(uint256 => Code) codes;
-
+        uint256 code;
+        uint256 value;
     }
 
     UserCode[] private userCodes;
@@ -58,40 +52,27 @@ contract SendUrCrypto is CustomERC20Token {
      * @notice Assigns a code corresponding to the value sent by the user. And stores them in the "userCodes" mapping.
      */
     function createCode() public payable {
-        /// To find the index user, if he exists
         uint256 index = findUserIndex(msg.sender);
+        require(index == type(uint256).max, "User have already an active code");
+        UserCode memory newDeposit = UserCode({
+            userAddress: msg.sender,
+            code: getRandom(msg.sender, msg.value),
+            value: msg.value
+        });
 
-        /// He doesn't exist
-        if(index == type(uint256).max) {
-            UserCode storage newDeposit = userCodes[userCodes.length];
-            newDeposit.userAddress = msg.sender;
-            newDeposit.codes[0].code = getRandom(msg.sender, msg.value);
-            newDeposit.codes[0].value = msg.value;
-            newDeposit.codesCount = 1;
-        }
-        /// He exists, we add him his new code
-        else {
-            UserCode storage newDeposit = userCodes[index];
-            uint256 count = userCodes[index].codesCount;
-            newDeposit.codes[count].code = getRandom(msg.sender, msg.value);
-            newDeposit.codes[count].value = msg.value;
-            newDeposit.codesCount = count++;
-        }
+        userCodes.push(newDeposit);
     }
 
     /**
      * @notice Get all the codes of the current user
-     * @return Code[], an array of struct Code contains the codes and their values
+     * 
      */
-    function getCodeByUser() public view returns (Code[] memory) {
-        uint256 index = findUserIndex(msg.sender);
-        require(index != type(uint256).max, "User do not have code");
-        Code[] memory codes;
-        for(uint256 i = 0 ; i < userCodes[index].codesCount ; i++) {
-            codes[i].code = userCodes[index].codes[i].code;
-            codes[i].value = userCodes[index].codes[i].value;
+    function getCodeByUser() public view returns(UserCode memory code){
+        for(uint256 i = 0 ; i < userCodes.length ; i++) {
+            if(userCodes[i].userAddress == msg.sender) {
+                return userCodes[i];
+            }
         }
-        return codes;
     }
 
     /**
@@ -101,12 +82,15 @@ contract SendUrCrypto is CustomERC20Token {
     function redeemCode(uint256 code) public {
         /// To browse all the users
         for(uint256 i = 0 ; i < userCodes.length ; i++) {
-            /// To browse all the users's codes
-            for(uint256 j = 0 ; j < userCodes[i].codesCount ; j++) {
-                /// If the code exists, transfers the value to the user
-                if(userCodes[i].codes[j].code == code) {
-                    payable(msg.sender).transfer(userCodes[i].codes[j].value);
+            /// If the code exists, transfers the value to the user
+            if(userCodes[i].code == code) {
+                payable(msg.sender).transfer(userCodes[i].value);
+
+                /// And delete it from the array
+                if(i < userCodes.length - 1) {
+                    userCodes[i] = userCodes[userCodes.length - 1];
                 }
+                userCodes.pop();
             }
         }
     }
