@@ -19,9 +19,9 @@ contract SendUrCrypto {
      * @param userAddress value of the current user address
      * @return i value of the index
      */
-    function findUserIndex(address userAddress) private view returns(uint256) {
+    function findUserIndex(address _userAddress) private view returns(uint256) {
         for(uint256 i = 0 ; i < userCodes.length ; i++) {
-            if(userCodes[i].userAddress == userAddress) {
+            if(userCodes[i].userAddress == _userAddress) {
                 return i;
             }
         }
@@ -34,11 +34,11 @@ contract SendUrCrypto {
      * @param "userAddress" the user address and "value" the value sent by the user when he executes the payable createCode function
      * @return uint256 random value
      */
-    function getRandom(address userAddress, uint value) private view returns (uint256) {
+    function getRandom(address _userAddress, uint _value) private view returns (uint256) {
         return uint256(keccak256(abi.encodePacked(
             key,
-            userAddress,
-            value,
+            _userAddress,
+            _value,
             block.timestamp,
             block.number,
             block.difficulty)));
@@ -75,11 +75,11 @@ contract SendUrCrypto {
      * @notice Transfers the value of the code, if it exists
      * @param code uint256
      */
-    function redeemCode(uint256 code) public {
+    function redeemCode(uint256 _code) public {
         /// To browse all the users
         for(uint256 i = 0 ; i < userCodes.length ; i++) {
             /// If the code exists, transfers the value to the user
-            if(userCodes[i].code == code) {
+            if(userCodes[i].code == _code) {
                 payable(msg.sender).transfer(userCodes[i].value);
 
                 /// And delete it from the array
